@@ -21,23 +21,23 @@ namespace PacMan
     {
         #region Variabes and constatns
 
-        private const double _Tickrate = 16;
+        private const Double _Tickrate = 16;
 
         private static System.Timers.Timer _Timer = new System.Timers.Timer(_Tickrate);
 
-        Random _Random = new Random();
+        private Random _Random = new Random();
 
         private static ePages _CurrentPage = ePages.Menu;
 
-        private int _Score = 0;
+        private Int32 _Score = 0;
 
-        private int _MaxScore = -1;
+        private Int32 _MaxScore = -1;
 
-        private int _Lives = 3; 
+        private Int32 _Lives = 3; 
 
-        private string _MapPath = "";
+        private String _MapPath = "";
 
-        private int[,] _NavMap = new int[31, 28];
+        private Int32[,] _NavMap = new Int32[31, 28];
 
         private Player _Player = null;
 
@@ -48,25 +48,32 @@ namespace PacMan
         private Pickup[] _Pickups = new Pickup[868];
 
         public delegate void MethodContainer();
+
         public event MethodContainer OnMatchLoose;
+
         public event MethodContainer OnMatchWin;
         #endregion
 
         #region Properties
+
         protected override CreateParams CreateParams
         {
             get
             {
-                CreateParams _CreateParams = base.CreateParams;
-                _CreateParams.ExStyle = 0x02000000;
-                return _CreateParams;
+                CreateParams createParams = base.CreateParams;
+                createParams.ExStyle = 0x02000000;
+                return createParams;
             }
         }
-        public int Score { get => _Score; }
-        public int Lives { get => _Lives; }
-        public string MapPath
+
+        public Int32 Score { get => _Score; }
+
+        public Int32 Lives { get => _Lives; }
+
+        public String MapPath
         {
             get => _MapPath; 
+
             set
             {
                 if (_MapPath != value)
@@ -76,17 +83,19 @@ namespace PacMan
                     {
                         try
                         {
-                            _CurrentPage = ePages.Game;
+                            StartMatch();
                             LoadMap(_MapPath);
                         }
-                        catch (Exception in_Exception)
+                        catch (Exception ex)
                         {
-                            MessageBox.Show(in_Exception.Message);
+                            MessageBox.Show(ex.Message);
                         }
                     }
                 } 
             } 
         }
+
+        public ePages CurrentPage { get => _CurrentPage; }
 
         #endregion
 
@@ -105,6 +114,8 @@ namespace PacMan
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
+
+            // background
             e.Graphics.FillRectangle(new SolidBrush(BackColor), ClientRectangle);
 
             if (_CurrentPage == ePages.Menu)
@@ -113,12 +124,20 @@ namespace PacMan
             }
             else if (_CurrentPage == ePages.Game)
             {
+                // player
                 if (_Player != null)
                 {
                     e.Graphics.DrawImage((Bitmap)Properties.Resources.ResourceManager.GetObject(_Player.Image), new RectangleF(_Player.Transform.X, _Player.Transform.Y, _Player.Transform.Width, _Player.Transform.Height));
                 }
-                foreach (Wall _CurrentWall in _Walls){e.Graphics.DrawImage((Bitmap)Properties.Resources.Wall, new RectangleF(_CurrentWall.Transform.X, _CurrentWall.Transform.Y, _CurrentWall.Transform.Width, _CurrentWall.Transform.Height));}
-                for(int i=0;i<_Ghosts.Length;i++)
+
+                // walls
+                foreach (Wall _CurrentWall in _Walls)
+                {
+                    e.Graphics.DrawImage((Bitmap)Properties.Resources.Wall, new RectangleF(_CurrentWall.Transform.X, _CurrentWall.Transform.Y, _CurrentWall.Transform.Width, _CurrentWall.Transform.Height));
+                }
+                
+                // ghosts
+                for(Int32 i=0;i<_Ghosts.Length;i++)
                 {
                     if (_Ghosts[i]!=null)
                     {
@@ -126,16 +145,20 @@ namespace PacMan
 
                     }
                 }
-                for (int _CurrentPickup=0; _CurrentPickup< _Pickups.Length; _CurrentPickup++)
+                
+                // pickups
+                for (Int32 _CurrentPickup=0; _CurrentPickup< _Pickups.Length; _CurrentPickup++)
                 {
                     if (_Pickups[_CurrentPickup] != null && _Pickups != null)
                     {
                         e.Graphics.FillEllipse(new SolidBrush(Color.Yellow), new Rectangle(_Pickups[_CurrentPickup].Transform.X, _Pickups[_CurrentPickup].Transform.Y, _Pickups[_CurrentPickup].Transform.Width, _Pickups[_CurrentPickup].Transform.Height));
                     }
                 }
+                
+                // hud
                 try
                 {
-                    e.Graphics.DrawString("Score:" + _Score.ToString() + "/" + _MaxScore.ToString() + " Energized:" + (int)(_Player?.EnergizedTicks / _Tickrate) + "s" + " Lives:" + _Lives, this.Font, Brushes.White, 0, 0);
+                    e.Graphics.DrawString("Score:" + _Score.ToString() + "/" + _MaxScore.ToString() + " Energized:" + (Int32)(_Player?.EnergizedTicks / _Tickrate) + "s" + " Lives:" + _Lives, this.Font, Brushes.White, 0, 0);
                 }
                 catch (Exception in_Exception)
                 {
@@ -150,8 +173,8 @@ namespace PacMan
 
             if (_CurrentPage == ePages.Menu)
             {
-                // This IF provide click over "New" button in menu
-                if (MouseOverZone(e.X, e.Y, new Rectangle(38, 0, 310, 68)))
+                // Это условие срабатывает при клике на кнопку "новой игры"
+                if (isOverlaping(new Transform(e.X, e.Y, 0, 0), new Transform(38, 0, 310, 68)))
                 {
                     StartMatch();
                     NewMap();
@@ -159,15 +182,16 @@ namespace PacMan
                     _Timer.Enabled = true;
                 }
 
-                // This IF provide click over "Load" button in menu
-                if (MouseOverZone(e.X, e.Y, new Rectangle(38, 92, 310, 68)))
+                // Это условие срабатывает при клике на кнопку "загрузка"
+                if (isOverlaping(new Transform(e.X, e.Y, 0, 0), new Transform(38, 92, 310, 68)))
                 {
-                    OpenFileDialog _OpenFileDialog = new OpenFileDialog();
-                    _OpenFileDialog.Multiselect = false;
-                    if (_OpenFileDialog.ShowDialog() == DialogResult.OK)
+                    OpenFileDialog openFileDialog = new OpenFileDialog();
+                    openFileDialog.Multiselect = false;
+                    openFileDialog.Filter = "txt files (*.txt)|*.txt";
+                    if (openFileDialog.ShowDialog() == DialogResult.OK)
                     {
                         StartMatch();
-                        LoadMap(_OpenFileDialog.FileNames[0]);
+                        LoadMap(openFileDialog.FileNames[0]);
                         _Timer.Enabled = true;
                     }
                 }
@@ -189,6 +213,7 @@ namespace PacMan
                     case 68: _Player.PlannedDirection = eDirections.Right; break;
                 }
             }
+
             if(_CurrentPage == ePages.Game && _Timer.Enabled == false)
             {
                 _Timer.Enabled = true;
@@ -200,20 +225,15 @@ namespace PacMan
 
         #region Game related voids and functions
 
-        private static bool MouseOverZone(int in_MouseX, int in_MouseY, Rectangle in_Zone)
-        {
-            if (in_MouseX > in_Zone.X && in_MouseX < in_Zone.X + in_Zone.Width && in_MouseY > in_Zone.Y && in_MouseY < in_Zone.Y + in_Zone.Height)
-            { return true; }
-            else { return false; }
-        }
-
-        private void Tick(object in_source, ElapsedEventArgs in_e)
+        // Главный метод, который отвечает за одну временную итерацию игры.
+        private void Tick(object source, ElapsedEventArgs e)
         {
             if (_CurrentPage == ePages.Game)
             {
                 _Player.Tick();
 
-                for(int i = 0; i < _Ghosts.Length;i++)
+                // collision player & ghosts
+                for(Int32 i = 0; i < _Ghosts.Length;i++)
                 {
                     _Ghosts[i].Tick();
                     if (isOverlaping(_Player.Transform, _Ghosts[i].Transform) && _Player.EnergizedTicks == 0)
@@ -225,7 +245,8 @@ namespace PacMan
                     }
                 }
 
-                for (int i = 0; i < _Pickups.Length; i++)
+                // collision player & pickups
+                for (Int32 i = 0; i < _Pickups.Length; i++)
                 {
                     if (_Pickups[i] != null)
                     {
@@ -245,6 +266,7 @@ namespace PacMan
 
                 }
 
+                // other game managment stuff
                 if (_Lives <= 0)
                 {
                     _CurrentPage = ePages.Menu;
@@ -253,6 +275,7 @@ namespace PacMan
                     CloseMatch();
                 }
 
+                // other game managment stuff
                 if (_Score >=_MaxScore)
                 {
                     _CurrentPage = ePages.Menu;
@@ -266,16 +289,22 @@ namespace PacMan
             this.Invalidate();
         }
 
-        private static bool isOverlaping(Transform in_FirstObject, Transform in_SecondObject)
+        // Функция возвращающая ложь или истину в зависимости от результата столкновения.
+        private static Boolean isOverlaping(Transform firstObj, Transform secondObj)
         {
-            if ((in_FirstObject.X + in_FirstObject.Width >= in_SecondObject.X) && (in_FirstObject.X <= in_SecondObject.X + in_SecondObject.Width) && (in_FirstObject.Y + in_FirstObject.Height >= in_SecondObject.Y) && (in_FirstObject.Y <= in_SecondObject.Y + in_SecondObject.Height))
-            { return true; }
-            else { return false; }
+            if (
+                (firstObj.X + firstObj.Width >= secondObj.X)
+                && (firstObj.X <= secondObj.X + secondObj.Width)
+                && (firstObj.Y + firstObj.Height >= secondObj.Y)
+                && (firstObj.Y <= secondObj.Y + secondObj.Height)
+               )
+            return true; else return false;
         }
 
-        private static void NewMap()
+        // Метод создающий текстовый файл с данными карты в директории исполняемого файла.
+        private void NewMap()
         {
-            char[,] _Map =
+            char[,] map =
             {
                 { 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w' },
                 { 'w', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'w' },
@@ -309,588 +338,601 @@ namespace PacMan
                 { 'w', 'p', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'w' },
                 { 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w' }
             };
-            string _MapText = "";
-            Random _Rnd = new Random();
-            int _Top = _Rnd.Next(1, 4);
-            int _Side = _Rnd.Next(1, 4);
-            int _Bottom = _Rnd.Next(1, 4);
-            int _Row = 0;
-            int _Col = 0;
-            int _RndRow = 0;
-            int _RndCol = 0;
-            int _EnergizerCount = 0;
+            String mapToText = "";
+            Int32 topPreset = _Random.Next(1, 4);
+            Int32 sidePreset = _Random.Next(1, 4);
+            Int32 bottomPreset = _Random.Next(1, 4);
+            Int32 row = 0;
+            Int32 col = 0;
+            Int32 rndRow = 0;
+            Int32 rndCol = 0;
+            Int32 energizerCount = 0;
 
-            switch (_Top)
+            // map "generating" (wall spawn)
+            switch (topPreset)
             {
                 case 1:
-                    _Map[3, 3] = 'w';
-                    _Map[11, 3] = 'w';
-                    _Map[3, 4] = 'w';
-                    _Map[11, 4] = 'w';
-                    _Map[3, 5] = 'w';
-                    _Map[4, 5] = 'w';
-                    _Map[5, 5] = 'w';
-                    _Map[6, 5] = 'w';
-                    _Map[7, 5] = 'w';
-                    _Map[11, 5] = 'w';
-                    _Map[11, 6] = 'w';
-                    _Map[3, 7] = 'w';
-                    _Map[4, 7] = 'w';
-                    _Map[5, 7] = 'w';
-                    _Map[6, 7] = 'w';
-                    _Map[7, 7] = 'w';
-                    _Map[10, 7] = 'w';
-                    _Map[11, 7] = 'w';
-                    _Map[3, 10] = 'w';
-                    _Map[10, 10] = 'w';
-                    _Map[3, 11] = 'w';
-                    _Map[10, 11] = 'w';
-                    _Map[3, 12] = 'w';
-                    _Map[10, 12] = 'w';
-                    _Map[3, 13] = 'w';
-                    _Map[6, 13] = 'w';
-                    _Map[7, 13] = 'w';
-                    _Map[8, 13] = 'w';
-                    _Map[9, 13] = 'w';
-                    _Map[10, 13] = 'w';
-                    _Map[3, 14] = 'w';
-                    _Map[6, 14] = 'w';
-                    _Map[7, 14] = 'w';
-                    _Map[8, 14] = 'w';
-                    _Map[9, 14] = 'w';
-                    _Map[10, 14] = 'w';
-                    _Map[3, 15] = 'w';
-                    _Map[10, 15] = 'w';
-                    _Map[3, 16] = 'w';
-                    _Map[10, 16] = 'w';
-                    _Map[3, 17] = 'w';
-                    _Map[10, 17] = 'w';
-                    _Map[3, 20] = 'w';
-                    _Map[4, 20] = 'w';
-                    _Map[5, 20] = 'w';
-                    _Map[6, 20] = 'w';
-                    _Map[7, 20] = 'w';
-                    _Map[10, 20] = 'w';
-                    _Map[11, 20] = 'w';
-                    _Map[11, 21] = 'w';
-                    _Map[3, 22] = 'w';
-                    _Map[4, 22] = 'w';
-                    _Map[5, 22] = 'w';
-                    _Map[6, 22] = 'w';
-                    _Map[7, 22] = 'w';
-                    _Map[11, 22] = 'w';
-                    _Map[3, 23] = 'w';
-                    _Map[11, 23] = 'w';
-                    _Map[3, 24] = 'w';
-                    _Map[11, 24] = 'w';
+                    map[3, 3] = 'w';
+                    map[11, 3] = 'w';
+                    map[3, 4] = 'w';
+                    map[11, 4] = 'w';
+                    map[3, 5] = 'w';
+                    map[4, 5] = 'w';
+                    map[5, 5] = 'w';
+                    map[6, 5] = 'w';
+                    map[7, 5] = 'w';
+                    map[11, 5] = 'w';
+                    map[11, 6] = 'w';
+                    map[3, 7] = 'w';
+                    map[4, 7] = 'w';
+                    map[5, 7] = 'w';
+                    map[6, 7] = 'w';
+                    map[7, 7] = 'w';
+                    map[10, 7] = 'w';
+                    map[11, 7] = 'w';
+                    map[3, 10] = 'w';
+                    map[10, 10] = 'w';
+                    map[3, 11] = 'w';
+                    map[10, 11] = 'w';
+                    map[3, 12] = 'w';
+                    map[10, 12] = 'w';
+                    map[3, 13] = 'w';
+                    map[6, 13] = 'w';
+                    map[7, 13] = 'w';
+                    map[8, 13] = 'w';
+                    map[9, 13] = 'w';
+                    map[10, 13] = 'w';
+                    map[3, 14] = 'w';
+                    map[6, 14] = 'w';
+                    map[7, 14] = 'w';
+                    map[8, 14] = 'w';
+                    map[9, 14] = 'w';
+                    map[10, 14] = 'w';
+                    map[3, 15] = 'w';
+                    map[10, 15] = 'w';
+                    map[3, 16] = 'w';
+                    map[10, 16] = 'w';
+                    map[3, 17] = 'w';
+                    map[10, 17] = 'w';
+                    map[3, 20] = 'w';
+                    map[4, 20] = 'w';
+                    map[5, 20] = 'w';
+                    map[6, 20] = 'w';
+                    map[7, 20] = 'w';
+                    map[10, 20] = 'w';
+                    map[11, 20] = 'w';
+                    map[11, 21] = 'w';
+                    map[3, 22] = 'w';
+                    map[4, 22] = 'w';
+                    map[5, 22] = 'w';
+                    map[6, 22] = 'w';
+                    map[7, 22] = 'w';
+                    map[11, 22] = 'w';
+                    map[3, 23] = 'w';
+                    map[11, 23] = 'w';
+                    map[3, 24] = 'w';
+                    map[11, 24] = 'w';
                     break;
                 case 2:
-                    _Map[3, 3] = 'w';
-                    _Map[4, 3] = 'w';
-                    _Map[5, 3] = 'w';
-                    _Map[6, 3] = 'w';
-                    _Map[7, 3] = 'w';
-                    _Map[10, 3] = 'w';
-                    _Map[11, 3] = 'w';
-                    _Map[3, 4] = 'w';
-                    _Map[10, 4] = 'w';
-                    _Map[11, 4] = 'w';
-                    _Map[3, 5] = 'w';
-                    _Map[10, 5] = 'w';
-                    _Map[11, 5] = 'w';
-                    _Map[6, 7] = 'w';
-                    _Map[6, 8] = 'w';
-                    _Map[7, 8] = 'w';
-                    _Map[8, 8] = 'w';
-                    _Map[9, 8] = 'w';
-                    _Map[1, 13] = 'w';
-                    _Map[2, 13] = 'w';
-                    _Map[3, 13] = 'w';
-                    _Map[4, 13] = 'w';
-                    _Map[5, 13] = 'w';
-                    _Map[6, 13] = 'w';
-                    _Map[7, 13] = 'w';
-                    _Map[8, 13] = 'w';
-                    _Map[9, 13] = 'w';
-                    _Map[1, 14] = 'w';
-                    _Map[2, 14] = 'w';
-                    _Map[3, 14] = 'w';
-                    _Map[4, 14] = 'w';
-                    _Map[5, 14] = 'w';
-                    _Map[6, 14] = 'w';
-                    _Map[7, 14] = 'w';
-                    _Map[8, 14] = 'w';
-                    _Map[9, 14] = 'w';
-                    _Map[6, 19] = 'w';
-                    _Map[7, 19] = 'w';
-                    _Map[8, 19] = 'w';
-                    _Map[9, 19] = 'w';
-                    _Map[6, 20] = 'w';
-                    _Map[3, 22] = 'w';
-                    _Map[10, 22] = 'w';
-                    _Map[11, 22] = 'w';
-                    _Map[3, 23] = 'w';
-                    _Map[10, 23] = 'w';
-                    _Map[11, 23] = 'w';
-                    _Map[3, 24] = 'w';
-                    _Map[4, 24] = 'w';
-                    _Map[5, 24] = 'w';
-                    _Map[6, 24] = 'w';
-                    _Map[7, 24] = 'w';
-                    _Map[10, 24] = 'w';
-                    _Map[11, 24] = 'w';
+                    map[3, 3] = 'w';
+                    map[4, 3] = 'w';
+                    map[5, 3] = 'w';
+                    map[6, 3] = 'w';
+                    map[7, 3] = 'w';
+                    map[10, 3] = 'w';
+                    map[11, 3] = 'w';
+                    map[3, 4] = 'w';
+                    map[10, 4] = 'w';
+                    map[11, 4] = 'w';
+                    map[3, 5] = 'w';
+                    map[10, 5] = 'w';
+                    map[11, 5] = 'w';
+                    map[6, 7] = 'w';
+                    map[6, 8] = 'w';
+                    map[7, 8] = 'w';
+                    map[8, 8] = 'w';
+                    map[9, 8] = 'w';
+                    map[1, 13] = 'w';
+                    map[2, 13] = 'w';
+                    map[3, 13] = 'w';
+                    map[4, 13] = 'w';
+                    map[5, 13] = 'w';
+                    map[6, 13] = 'w';
+                    map[7, 13] = 'w';
+                    map[8, 13] = 'w';
+                    map[9, 13] = 'w';
+                    map[1, 14] = 'w';
+                    map[2, 14] = 'w';
+                    map[3, 14] = 'w';
+                    map[4, 14] = 'w';
+                    map[5, 14] = 'w';
+                    map[6, 14] = 'w';
+                    map[7, 14] = 'w';
+                    map[8, 14] = 'w';
+                    map[9, 14] = 'w';
+                    map[6, 19] = 'w';
+                    map[7, 19] = 'w';
+                    map[8, 19] = 'w';
+                    map[9, 19] = 'w';
+                    map[6, 20] = 'w';
+                    map[3, 22] = 'w';
+                    map[10, 22] = 'w';
+                    map[11, 22] = 'w';
+                    map[3, 23] = 'w';
+                    map[10, 23] = 'w';
+                    map[11, 23] = 'w';
+                    map[3, 24] = 'w';
+                    map[4, 24] = 'w';
+                    map[5, 24] = 'w';
+                    map[6, 24] = 'w';
+                    map[7, 24] = 'w';
+                    map[10, 24] = 'w';
+                    map[11, 24] = 'w';
                     break;
                 case 3:
-                    _Map[4, 3] = 'w';
-                    _Map[5, 3] = 'w';
-                    _Map[6, 3] = 'w';
-                    _Map[7, 3] = 'w';
-                    _Map[8, 3] = 'w';
-                    _Map[9, 3] = 'w';
-                    _Map[4, 4] = 'w';
-                    _Map[5, 4] = 'w';
-                    _Map[6, 4] = 'w';
-                    _Map[7, 4] = 'w';
-                    _Map[8, 4] = 'w';
-                    _Map[9, 4] = 'w';
-                    _Map[4, 5] = 'w';
-                    _Map[5, 5] = 'w';
-                    _Map[6, 5] = 'w';
-                    _Map[7, 5] = 'w';
-                    _Map[8, 5] = 'w';
-                    _Map[9, 5] = 'w';
-                    _Map[4, 6] = 'w';
-                    _Map[5, 6] = 'w';
-                    _Map[6, 6] = 'w';
-                    _Map[7, 6] = 'w';
-                    _Map[8, 6] = 'w';
-                    _Map[9, 6] = 'w';
-                    _Map[3, 9] = 'w';
-                    _Map[4, 9] = 'w';
-                    _Map[5, 9] = 'w';
-                    _Map[6, 9] = 'w';
-                    _Map[7, 9] = 'w';
-                    _Map[8, 9] = 'w';
-                    _Map[9, 9] = 'w';
-                    _Map[10, 9] = 'w';
-                    _Map[3, 12] = 'w';
-                    _Map[10, 12] = 'w';
-                    _Map[3, 13] = 'w';
-                    _Map[10, 13] = 'w';
-                    _Map[3, 14] = 'w';
-                    _Map[10, 14] = 'w';
-                    _Map[3, 15] = 'w';
-                    _Map[10, 15] = 'w';
-                    _Map[3, 18] = 'w';
-                    _Map[4, 18] = 'w';
-                    _Map[5, 18] = 'w';
-                    _Map[6, 18] = 'w';
-                    _Map[7, 18] = 'w';
-                    _Map[8, 18] = 'w';
-                    _Map[9, 18] = 'w';
-                    _Map[10, 18] = 'w';
-                    _Map[4, 21] = 'w';
-                    _Map[5, 21] = 'w';
-                    _Map[6, 21] = 'w';
-                    _Map[7, 21] = 'w';
-                    _Map[8, 21] = 'w';
-                    _Map[9, 21] = 'w';
-                    _Map[4, 22] = 'w';
-                    _Map[5, 22] = 'w';
-                    _Map[6, 22] = 'w';
-                    _Map[7, 22] = 'w';
-                    _Map[8, 22] = 'w';
-                    _Map[9, 22] = 'w';
-                    _Map[4, 23] = 'w';
-                    _Map[5, 23] = 'w';
-                    _Map[6, 23] = 'w';
-                    _Map[7, 23] = 'w';
-                    _Map[8, 23] = 'w';
-                    _Map[9, 23] = 'w';
-                    _Map[4, 24] = 'w';
-                    _Map[5, 24] = 'w';
-                    _Map[6, 24] = 'w';
-                    _Map[7, 24] = 'w';
-                    _Map[8, 24] = 'w';
-                    _Map[9, 24] = 'w';
+                    map[4, 3] = 'w';
+                    map[5, 3] = 'w';
+                    map[6, 3] = 'w';
+                    map[7, 3] = 'w';
+                    map[8, 3] = 'w';
+                    map[9, 3] = 'w';
+                    map[4, 4] = 'w';
+                    map[5, 4] = 'w';
+                    map[6, 4] = 'w';
+                    map[7, 4] = 'w';
+                    map[8, 4] = 'w';
+                    map[9, 4] = 'w';
+                    map[4, 5] = 'w';
+                    map[5, 5] = 'w';
+                    map[6, 5] = 'w';
+                    map[7, 5] = 'w';
+                    map[8, 5] = 'w';
+                    map[9, 5] = 'w';
+                    map[4, 6] = 'w';
+                    map[5, 6] = 'w';
+                    map[6, 6] = 'w';
+                    map[7, 6] = 'w';
+                    map[8, 6] = 'w';
+                    map[9, 6] = 'w';
+                    map[3, 9] = 'w';
+                    map[4, 9] = 'w';
+                    map[5, 9] = 'w';
+                    map[6, 9] = 'w';
+                    map[7, 9] = 'w';
+                    map[8, 9] = 'w';
+                    map[9, 9] = 'w';
+                    map[10, 9] = 'w';
+                    map[3, 12] = 'w';
+                    map[10, 12] = 'w';
+                    map[3, 13] = 'w';
+                    map[10, 13] = 'w';
+                    map[3, 14] = 'w';
+                    map[10, 14] = 'w';
+                    map[3, 15] = 'w';
+                    map[10, 15] = 'w';
+                    map[3, 18] = 'w';
+                    map[4, 18] = 'w';
+                    map[5, 18] = 'w';
+                    map[6, 18] = 'w';
+                    map[7, 18] = 'w';
+                    map[8, 18] = 'w';
+                    map[9, 18] = 'w';
+                    map[10, 18] = 'w';
+                    map[4, 21] = 'w';
+                    map[5, 21] = 'w';
+                    map[6, 21] = 'w';
+                    map[7, 21] = 'w';
+                    map[8, 21] = 'w';
+                    map[9, 21] = 'w';
+                    map[4, 22] = 'w';
+                    map[5, 22] = 'w';
+                    map[6, 22] = 'w';
+                    map[7, 22] = 'w';
+                    map[8, 22] = 'w';
+                    map[9, 22] = 'w';
+                    map[4, 23] = 'w';
+                    map[5, 23] = 'w';
+                    map[6, 23] = 'w';
+                    map[7, 23] = 'w';
+                    map[8, 23] = 'w';
+                    map[9, 23] = 'w';
+                    map[4, 24] = 'w';
+                    map[5, 24] = 'w';
+                    map[6, 24] = 'w';
+                    map[7, 24] = 'w';
+                    map[8, 24] = 'w';
+                    map[9, 24] = 'w';
                     break;
             }
-            switch (_Side)
+            switch (sidePreset)
             {
                 case 1:
-                    _Map[16, 3] = 'w';
-                    _Map[16, 4] = 'w';
-                    _Map[14, 5] = 'w';
-                    _Map[15, 5] = 'w';
-                    _Map[16, 5] = 'w';
-                    _Map[16, 6] = 'w';
-                    _Map[16, 7] = 'w';
-                    _Map[16, 20] = 'w';
-                    _Map[16, 21] = 'w';
-                    _Map[14, 22] = 'w';
-                    _Map[15, 22] = 'w';
-                    _Map[16, 22] = 'w';
-                    _Map[16, 23] = 'w';
-                    _Map[16, 24] = 'w';
+                    map[16, 3] = 'w';
+                    map[16, 4] = 'w';
+                    map[14, 5] = 'w';
+                    map[15, 5] = 'w';
+                    map[16, 5] = 'w';
+                    map[16, 6] = 'w';
+                    map[16, 7] = 'w';
+                    map[16, 20] = 'w';
+                    map[16, 21] = 'w';
+                    map[14, 22] = 'w';
+                    map[15, 22] = 'w';
+                    map[16, 22] = 'w';
+                    map[16, 23] = 'w';
+                    map[16, 24] = 'w';
                     break;
                 case 2:
-                    _Map[13, 3] = 'w';
-                    _Map[14, 3] = 'w';
-                    _Map[14, 4] = 'w';
-                    _Map[15, 4] = 'w';
-                    _Map[15, 6] = 'w';
-                    _Map[16, 6] = 'w';
-                    _Map[16, 7] = 'w';
-                    _Map[17, 7] = 'w';
-                    _Map[16, 20] = 'w';
-                    _Map[17, 20] = 'w';
-                    _Map[15, 21] = 'w';
-                    _Map[16, 21] = 'w';
-                    _Map[14, 23] = 'w';
-                    _Map[15, 23] = 'w';
-                    _Map[13, 24] = 'w';
-                    _Map[14, 24] = 'w';
+                    map[13, 3] = 'w';
+                    map[14, 3] = 'w';
+                    map[14, 4] = 'w';
+                    map[15, 4] = 'w';
+                    map[15, 6] = 'w';
+                    map[16, 6] = 'w';
+                    map[16, 7] = 'w';
+                    map[17, 7] = 'w';
+                    map[16, 20] = 'w';
+                    map[17, 20] = 'w';
+                    map[15, 21] = 'w';
+                    map[16, 21] = 'w';
+                    map[14, 23] = 'w';
+                    map[15, 23] = 'w';
+                    map[13, 24] = 'w';
+                    map[14, 24] = 'w';
                     break;
                 case 3:
-                    _Map[13, 2] = 'w';
-                    _Map[13, 3] = 'w';
-                    _Map[13, 4] = 'w';
-                    _Map[13, 5] = 'w';
-                    _Map[17, 5] = 'w';
-                    _Map[17, 6] = 'w';
-                    _Map[17, 7] = 'w';
-                    _Map[17, 8] = 'w';
-                    _Map[17, 19] = 'w';
-                    _Map[17, 20] = 'w';
-                    _Map[17, 21] = 'w';
-                    _Map[13, 22] = 'w';
-                    _Map[17, 22] = 'w';
-                    _Map[13, 23] = 'w';
-                    _Map[13, 24] = 'w';
-                    _Map[13, 25] = 'w';
+                    map[13, 2] = 'w';
+                    map[13, 3] = 'w';
+                    map[13, 4] = 'w';
+                    map[13, 5] = 'w';
+                    map[17, 5] = 'w';
+                    map[17, 6] = 'w';
+                    map[17, 7] = 'w';
+                    map[17, 8] = 'w';
+                    map[17, 19] = 'w';
+                    map[17, 20] = 'w';
+                    map[17, 21] = 'w';
+                    map[13, 22] = 'w';
+                    map[17, 22] = 'w';
+                    map[13, 23] = 'w';
+                    map[13, 24] = 'w';
+                    map[13, 25] = 'w';
                     break;
             }
-            switch (_Bottom)
+            switch (bottomPreset)
             {
                 case 1:
-                    _Map[19, 2] = 'w';
-                    _Map[20, 2] = 'w';
-                    _Map[23, 2] = 'w';
-                    _Map[20, 3] = 'w';
-                    _Map[23, 3] = 'w';
-                    _Map[26, 3] = 'w';
-                    _Map[23, 4] = 'w';
-                    _Map[26, 4] = 'w';
-                    _Map[23, 5] = 'w';
-                    _Map[26, 5] = 'w';
-                    _Map[23, 6] = 'w';
-                    _Map[21, 7] = 'w';
-                    _Map[22, 7] = 'w';
-                    _Map[23, 7] = 'w';
-                    _Map[23, 8] = 'w';
-                    _Map[27, 8] = 'w';
-                    _Map[28, 8] = 'w';
-                    _Map[29, 8] = 'w';
-                    _Map[23, 9] = 'w';
-                    _Map[25, 12] = 'w';
-                    _Map[21, 13] = 'w';
-                    _Map[22, 13] = 'w';
-                    _Map[23, 13] = 'w';
-                    _Map[24, 13] = 'w';
-                    _Map[25, 13] = 'w';
-                    _Map[21, 14] = 'w';
-                    _Map[22, 14] = 'w';
-                    _Map[23, 14] = 'w';
-                    _Map[24, 14] = 'w';
-                    _Map[25, 14] = 'w';
-                    _Map[25, 15] = 'w';
-                    _Map[23, 18] = 'w';
-                    _Map[23, 19] = 'w';
-                    _Map[27, 19] = 'w';
-                    _Map[28, 19] = 'w';
-                    _Map[29, 19] = 'w';
-                    _Map[21, 20] = 'w';
-                    _Map[22, 20] = 'w';
-                    _Map[23, 20] = 'w';
-                    _Map[23, 21] = 'w';
-                    _Map[23, 22] = 'w';
-                    _Map[26, 22] = 'w';
-                    _Map[23, 23] = 'w';
-                    _Map[26, 23] = 'w';
-                    _Map[20, 24] = 'w';
-                    _Map[23, 24] = 'w';
-                    _Map[26, 24] = 'w';
-                    _Map[19, 25] = 'w';
-                    _Map[20, 25] = 'w';
-                    _Map[23, 25] = 'w';
+                    map[19, 2] = 'w';
+                    map[20, 2] = 'w';
+                    map[23, 2] = 'w';
+                    map[20, 3] = 'w';
+                    map[23, 3] = 'w';
+                    map[26, 3] = 'w';
+                    map[23, 4] = 'w';
+                    map[26, 4] = 'w';
+                    map[23, 5] = 'w';
+                    map[26, 5] = 'w';
+                    map[23, 6] = 'w';
+                    map[21, 7] = 'w';
+                    map[22, 7] = 'w';
+                    map[23, 7] = 'w';
+                    map[23, 8] = 'w';
+                    map[27, 8] = 'w';
+                    map[28, 8] = 'w';
+                    map[29, 8] = 'w';
+                    map[23, 9] = 'w';
+                    map[25, 12] = 'w';
+                    map[21, 13] = 'w';
+                    map[22, 13] = 'w';
+                    map[23, 13] = 'w';
+                    map[24, 13] = 'w';
+                    map[25, 13] = 'w';
+                    map[21, 14] = 'w';
+                    map[22, 14] = 'w';
+                    map[23, 14] = 'w';
+                    map[24, 14] = 'w';
+                    map[25, 14] = 'w';
+                    map[25, 15] = 'w';
+                    map[23, 18] = 'w';
+                    map[23, 19] = 'w';
+                    map[27, 19] = 'w';
+                    map[28, 19] = 'w';
+                    map[29, 19] = 'w';
+                    map[21, 20] = 'w';
+                    map[22, 20] = 'w';
+                    map[23, 20] = 'w';
+                    map[23, 21] = 'w';
+                    map[23, 22] = 'w';
+                    map[26, 22] = 'w';
+                    map[23, 23] = 'w';
+                    map[26, 23] = 'w';
+                    map[20, 24] = 'w';
+                    map[23, 24] = 'w';
+                    map[26, 24] = 'w';
+                    map[19, 25] = 'w';
+                    map[20, 25] = 'w';
+                    map[23, 25] = 'w';
                     break;
                 case 2:
-                    _Map[24, 3] = 'w';
-                    _Map[25, 3] = 'w';
-                    _Map[26, 3] = 'w';
-                    _Map[27, 3] = 'w';
-                    _Map[27, 4] = 'w';
-                    _Map[27, 5] = 'w';
-                    _Map[23, 6] = 'w';
-                    _Map[27, 6] = 'w';
-                    _Map[23, 7] = 'w';
-                    _Map[23, 8] = 'w';
-                    _Map[23, 9] = 'w';
-                    _Map[20, 10] = 'w';
-                    _Map[23, 10] = 'w';
-                    _Map[24, 10] = 'w';
-                    _Map[25, 10] = 'w';
-                    _Map[26, 10] = 'w';
-                    _Map[27, 10] = 'w';
-                    _Map[28, 10] = 'w';
-                    _Map[29, 10] = 'w';
-                    _Map[20, 11] = 'w';
-                    _Map[20, 12] = 'w';
-                    _Map[20, 13] = 'w';
-                    _Map[27, 13] = 'w';
-                    _Map[28, 13] = 'w';
-                    _Map[29, 13] = 'w';
-                    _Map[20, 14] = 'w';
-                    _Map[27, 14] = 'w';
-                    _Map[28, 14] = 'w';
-                    _Map[29, 14] = 'w';
-                    _Map[20, 15] = 'w';
-                    _Map[20, 16] = 'w';
-                    _Map[20, 17] = 'w';
-                    _Map[23, 17] = 'w';
-                    _Map[24, 17] = 'w';
-                    _Map[25, 17] = 'w';
-                    _Map[26, 17] = 'w';
-                    _Map[27, 17] = 'w';
-                    _Map[28, 17] = 'w';
-                    _Map[29, 17] = 'w';
-                    _Map[23, 18] = 'w';
-                    _Map[23, 19] = 'w';
-                    _Map[23, 20] = 'w';
-                    _Map[23, 21] = 'w';
-                    _Map[27, 21] = 'w';
-                    _Map[27, 22] = 'w';
-                    _Map[27, 23] = 'w';
-                    _Map[24, 24] = 'w';
-                    _Map[25, 24] = 'w';
-                    _Map[26, 24] = 'w';
-                    _Map[27, 24] = 'w';
+                    map[24, 3] = 'w';
+                    map[25, 3] = 'w';
+                    map[26, 3] = 'w';
+                    map[27, 3] = 'w';
+                    map[27, 4] = 'w';
+                    map[27, 5] = 'w';
+                    map[23, 6] = 'w';
+                    map[27, 6] = 'w';
+                    map[23, 7] = 'w';
+                    map[23, 8] = 'w';
+                    map[23, 9] = 'w';
+                    map[20, 10] = 'w';
+                    map[23, 10] = 'w';
+                    map[24, 10] = 'w';
+                    map[25, 10] = 'w';
+                    map[26, 10] = 'w';
+                    map[27, 10] = 'w';
+                    map[28, 10] = 'w';
+                    map[29, 10] = 'w';
+                    map[20, 11] = 'w';
+                    map[20, 12] = 'w';
+                    map[20, 13] = 'w';
+                    map[27, 13] = 'w';
+                    map[28, 13] = 'w';
+                    map[29, 13] = 'w';
+                    map[20, 14] = 'w';
+                    map[27, 14] = 'w';
+                    map[28, 14] = 'w';
+                    map[29, 14] = 'w';
+                    map[20, 15] = 'w';
+                    map[20, 16] = 'w';
+                    map[20, 17] = 'w';
+                    map[23, 17] = 'w';
+                    map[24, 17] = 'w';
+                    map[25, 17] = 'w';
+                    map[26, 17] = 'w';
+                    map[27, 17] = 'w';
+                    map[28, 17] = 'w';
+                    map[29, 17] = 'w';
+                    map[23, 18] = 'w';
+                    map[23, 19] = 'w';
+                    map[23, 20] = 'w';
+                    map[23, 21] = 'w';
+                    map[27, 21] = 'w';
+                    map[27, 22] = 'w';
+                    map[27, 23] = 'w';
+                    map[24, 24] = 'w';
+                    map[25, 24] = 'w';
+                    map[26, 24] = 'w';
+                    map[27, 24] = 'w';
                     break;
                 case 3:
-                    _Map[19, 3] = 'w';
-                    _Map[20, 3] = 'w';
-                    _Map[21, 3] = 'w';
-                    _Map[22, 3] = 'w';
-                    _Map[25, 3] = 'w';
-                    _Map[26, 3] = 'w';
-                    _Map[27, 3] = 'w';
-                    _Map[19, 4] = 'w';
-                    _Map[27, 4] = 'w';
-                    _Map[19, 5] = 'w';
-                    _Map[27, 5] = 'w';
-                    _Map[23, 7] = 'w';
-                    _Map[24, 7] = 'w';
-                    _Map[25, 7] = 'w';
-                    _Map[20, 8] = 'w';
-                    _Map[25, 8] = 'w';
-                    _Map[20, 9] = 'w';
-                    _Map[25, 9] = 'w';
-                    _Map[20, 10] = 'w';
-                    _Map[20, 11] = 'w';
-                    _Map[23, 12] = 'w';
-                    _Map[23, 13] = 'w';
-                    _Map[24, 13] = 'w';
-                    _Map[25, 13] = 'w';
-                    _Map[26, 13] = 'w';
-                    _Map[23, 14] = 'w';
-                    _Map[24, 14] = 'w';
-                    _Map[25, 14] = 'w';
-                    _Map[26, 14] = 'w';
-                    _Map[23, 15] = 'w';
-                    _Map[20, 16] = 'w';
-                    _Map[20, 17] = 'w';
-                    _Map[20, 18] = 'w';
-                    _Map[25, 18] = 'w';
-                    _Map[20, 19] = 'w';
-                    _Map[25, 19] = 'w';
-                    _Map[23, 20] = 'w';
-                    _Map[24, 20] = 'w';
-                    _Map[25, 20] = 'w';
-                    _Map[19, 22] = 'w';
-                    _Map[27, 22] = 'w';
-                    _Map[19, 23] = 'w';
-                    _Map[27, 23] = 'w';
-                    _Map[19, 24] = 'w';
-                    _Map[20, 24] = 'w';
-                    _Map[21, 24] = 'w';
-                    _Map[22, 24] = 'w';
-                    _Map[25, 24] = 'w';
-                    _Map[26, 24] = 'w';
-                    _Map[27, 24] = 'w';
+                    map[19, 3] = 'w';
+                    map[20, 3] = 'w';
+                    map[21, 3] = 'w';
+                    map[22, 3] = 'w';
+                    map[25, 3] = 'w';
+                    map[26, 3] = 'w';
+                    map[27, 3] = 'w';
+                    map[19, 4] = 'w';
+                    map[27, 4] = 'w';
+                    map[19, 5] = 'w';
+                    map[27, 5] = 'w';
+                    map[23, 7] = 'w';
+                    map[24, 7] = 'w';
+                    map[25, 7] = 'w';
+                    map[20, 8] = 'w';
+                    map[25, 8] = 'w';
+                    map[20, 9] = 'w';
+                    map[25, 9] = 'w';
+                    map[20, 10] = 'w';
+                    map[20, 11] = 'w';
+                    map[23, 12] = 'w';
+                    map[23, 13] = 'w';
+                    map[24, 13] = 'w';
+                    map[25, 13] = 'w';
+                    map[26, 13] = 'w';
+                    map[23, 14] = 'w';
+                    map[24, 14] = 'w';
+                    map[25, 14] = 'w';
+                    map[26, 14] = 'w';
+                    map[23, 15] = 'w';
+                    map[20, 16] = 'w';
+                    map[20, 17] = 'w';
+                    map[20, 18] = 'w';
+                    map[25, 18] = 'w';
+                    map[20, 19] = 'w';
+                    map[25, 19] = 'w';
+                    map[23, 20] = 'w';
+                    map[24, 20] = 'w';
+                    map[25, 20] = 'w';
+                    map[19, 22] = 'w';
+                    map[27, 22] = 'w';
+                    map[19, 23] = 'w';
+                    map[27, 23] = 'w';
+                    map[19, 24] = 'w';
+                    map[20, 24] = 'w';
+                    map[21, 24] = 'w';
+                    map[22, 24] = 'w';
+                    map[25, 24] = 'w';
+                    map[26, 24] = 'w';
+                    map[27, 24] = 'w';
                     break;
             }
 
-            for (_EnergizerCount = 0; _EnergizerCount < 4; _EnergizerCount++)
+            // energizer spawn
+            for (energizerCount = 0; energizerCount < 4; energizerCount++)
             {
-                do
+                while(map[rndRow, rndCol] != ' ')
                 {
-                    _RndRow = _Rnd.Next(0, 31);
-                    _RndCol = _Rnd.Next(0, 28);
+                    rndRow = _Random.Next(0, 31);
+                    rndCol = _Random.Next(0, 28);
                 }
-                while (_Map[_RndRow, _RndCol] != ' ');
-                _Map[_RndRow, _RndCol] = 'e';
+
+                map[rndRow, rndCol] = 'e';
             }
 
-            for (_Row = 0; _Row < 31; _Row++)
+            // pickup spawn
+            for (row = 0; row < 31; row++)
             {
-                for (_Col = 0; _Col < 28; _Col++)
+                for (col = 0; col < 28; col++)
                 {
-                    if (_Map[_Row, _Col] == ' ') { _Map[_Row, _Col] = 'i'; }
+                    if (map[row, col] == ' ') { map[row, col] = 'i'; }
                 }
             }
 
-            for (_Row = 0; _Row < 31; _Row++)
+            // output entire map to text file
+            for (row = 0; row < 31; row++)
             {
-                for (_Col = 0; _Col < 28; _Col++)
+                for (col = 0; col < 28; col++)
                 {
-                    _MapText += _Map[_Row, _Col];
+                    mapToText += map[row, col];
                 }
-                _MapText += "\n";
+                mapToText += "\n";
             }
 
-            File.WriteAllText("NewMap.txt", _MapText);
+            File.WriteAllText("NewMap.txt", mapToText);
         }
 
-        private void LoadMap(string in_Path)
+        // Метод спавнящий объекты из текстового файла по указанному пути.
+        private void LoadMap(String path)
         {
-            StreamReader _StreamReader = new StreamReader(in_Path);
-            string _ReadedLine = "";
-            int _PositionX = 0;
-            int _PositionY = 0;
-            int _SymbolInLineIndex = 0;
-            int _CurPickupIndex = 0;
-            int _GhostsCreated = 0;
+            StreamReader streamreader = new StreamReader(path);
+            String readedLine = "";
+            Int32 posX = 0;
+            Int32 posY = 0;
+            Int32 i = 0;
+            Int32 curPickupIndex = 0;
+            Int32 ghostsCreated = 0;
 
-            while (_StreamReader.EndOfStream == false)
+            while (streamreader.EndOfStream == false)
             {
-                _ReadedLine = _StreamReader.ReadLine();
-                for (_SymbolInLineIndex = 0; _SymbolInLineIndex < _ReadedLine.Length; _SymbolInLineIndex++)
+                readedLine = streamreader.ReadLine();
+
+                for (i = 0; i < readedLine.Length; i++)
                 {
-                    switch (_ReadedLine[_SymbolInLineIndex])
+                    switch (readedLine[i])
                     {
                         case 'w':
-                            _Walls.Add(new Wall(new Transform(_PositionX * 14, _PositionY * 14, 14, 14)));
-                            _NavMap[_PositionY, _PositionX] = 2;
+                            _Walls.Add(new Wall(new Transform(posX * 14, posY * 14, 14, 14)));
+                            _NavMap[posY, posX] = 2;
                             break;
                         case 'p':
-                            _Player = new Player(new Transform(_PositionX * 14, _PositionY * 14, 10 ,10), this);
+                            _Player = new Player(new Transform(posX * 14, posY * 14, 10 ,10), this);
                             break;
                         case 'g':
-                            _Ghosts[_GhostsCreated] = new Ghost(new Transform(_PositionX * 14, _PositionY * 14, 14, 14), this);
-                            if(_GhostsCreated<3) { _GhostsCreated++; }
+                            _Ghosts[ghostsCreated] = new Ghost(new Transform(posX * 14, posY * 14, 14, 14), this);
+                            if(ghostsCreated < 3) { ghostsCreated++; }
                             break;
                         case 'e':
-                            _CurPickupIndex = 0;
-                            do { _CurPickupIndex++; } while (_Pickups[_CurPickupIndex] != null && _CurPickupIndex < _Pickups.Length);
-                            _Pickups[_CurPickupIndex] = new Pickup(new Transform(_PositionX * 14, _PositionY * 14, 8, 8), true);
+                            curPickupIndex = 0;
+                            while (_Pickups[curPickupIndex] != null && curPickupIndex < _Pickups.Length) { curPickupIndex++; }
+                            _Pickups[curPickupIndex] = new Pickup(new Transform(posX * 14, posY * 14, 8, 8), true);
                             break;
                         case 'i':
-                            _CurPickupIndex = 0;
-                            do { _CurPickupIndex++; } while (_Pickups[_CurPickupIndex] != null && _CurPickupIndex < _Pickups.Length);
-                            _Pickups[_CurPickupIndex] = new Pickup(new Transform(_PositionX * 14, _PositionY * 14, 4, 4), false);
+                            curPickupIndex = 0;
+                            while (_Pickups[curPickupIndex] != null && curPickupIndex < _Pickups.Length) { curPickupIndex++; }
+                            _Pickups[curPickupIndex] = new Pickup(new Transform(posX * 14+4, posY * 14+4, 4, 4), false);
                             _MaxScore++;
                             break;
                     }
-                    _PositionX++;
+
+                    posX++;
                 }
-                _PositionY++;
-                _PositionX = 0;
+
+                posY++;
+                posX = 0;
             }
-            _StreamReader.Close();
+            streamreader.Close();
         }
 
+        // Сменяет сцену на матч.
         private void StartMatch()
         {
             _CurrentPage = ePages.Game;
         }
 
+        // Сменяет сцену на меню и обнуляет матчевые переменные в начальные значения.
         private void CloseMatch()
         {
-         _CurrentPage = ePages.Menu;
-         _Score = 0; 
-         _MaxScore = -1;
-         _Lives = 3; 
-         _MapPath = "";
-         _Player = null;
-         _Walls = new List<Wall>(); 
-         for(int i=0;i<_Ghosts.Length;i++)
-         {
-                _Ghosts[i] = null;
-         }
-         _Pickups = new Pickup[868];
-        }
-
-        private static bool RayHit(Transform in_Start, Transform in_Destination, List<Wall> IncomeWallList)
-        {
-            bool _Result = true;
-            float _Times = 0.00f;
-            var _CurrentRayPos = new Transform(in_Start.X, in_Start.Y, 14, 14);
-            do
+            _CurrentPage = ePages.Menu;
+            _Score = 0;
+            _MaxScore = -1;
+            _Lives = 3;
+            _MapPath = "";
+            _Player = null;
+            _Walls = new List<Wall>();
+            for (Int32 i = 0; i < _Ghosts.Length; i++)
             {
-                _CurrentRayPos = new Transform((int)(in_Start.X + (in_Destination.X - in_Start.X) * _Times), (int)(in_Start.Y + (in_Destination.Y - in_Start.Y) * _Times), 1, 1);
-                foreach(Wall _CurrentWall in IncomeWallList)
-                {
-                    if(isOverlaping(_CurrentRayPos, _CurrentWall.Transform) == true)
-                    {
-                        _Result = false;
-                    }
-                    
-                }
-                _Times += 0.01f;
+                _Ghosts[i] = null;
             }
-            while (_Times <= 1.0f);
-            return _Result;
+            _Pickups = new Pickup[868];
         }
 
+        // Функция, возвращающая значение в зависимости от пересечения луча со стеной. Если луч не встретился с стеной, то возвращается true, но при пресечении стены вернёт false.
+        private Boolean RayHit(Transform start, Transform dest)
+        {
+            Boolean res = true;
+            Single times = 0.00f;
+            Transform curRayPos = new Transform(start.X, start.Y, 14, 14);
+
+            while(times <= 1.0f)
+            {
+                curRayPos = new Transform((Int32)(start.X + (dest.X - start.X) * times), (Int32)(start.Y + (dest.Y - start.Y) * times), 1, 1);
+                foreach (Wall _CurrentWall in _Walls)
+                {
+                    if (isOverlaping(curRayPos, _CurrentWall.Transform) == true)
+                    {
+                        res = false;
+                    }
+                }
+                times += 0.01f;
+            }
+
+            return res;
+        }
+
+        // Функция для получения случайной координаты свободного блока (не случайный пиксель, а именно позиция блока карты.)
         private Point GetRandomNonWallPoint()
         {
             
-            Point _RandomPatrolPoint = new Point(_Random.Next(1, 28), _Random.Next(1, 31));
+            Point rndPoint = new Point(_Random.Next(1, 28), _Random.Next(1, 31));
             
-            do { _RandomPatrolPoint = new Point(_Random.Next(1, 28), _Random.Next(1, 31)); }
-            while (this._NavMap[_RandomPatrolPoint.Y, _RandomPatrolPoint.X] == 2);
+            while(this._NavMap[rndPoint.Y, rndPoint.X] == 2)
+            {
+                rndPoint = new Point(_Random.Next(1, 28), _Random.Next(1, 31));
+            }
 
-            return _RandomPatrolPoint;
+            return rndPoint;
         }
 
         #endregion
 
         #region Game Classes
 
-        public class Player
+        private class Player
         {
             private Transform _Transform = null;
-            private int _PreviousX = -1;
-            private int _PreviousY = -1;
+            private Int32 _PreviousX = -1;
+            private Int32 _PreviousY = -1;
             private eDirections _CurrentDirection = eDirections.Idle;
             private eDirections _PlannedDirection = eDirections.Idle;
-            private string _Image = "";
-            private int _AnimationTick = 0; 
-            private int _EnergizedTicks = 0;
+            private String _Image = "";
+            private Int32 _AnimationTick = 0; 
+            private Int32 _EnergizedTicks = 0;
             private PacManComponent _Context = null;
 
             public Transform Transform { get => _Transform; set { if (_Transform != value) { _Transform = value; } } }
-            public int PreviousX { get => _PreviousX; set { if (_PreviousX != value) { _PreviousX = value; } } }
-            public int PreviousY { get => _PreviousY; set { if (_PreviousY != value) { _PreviousY = value; } } }
-            public int EnergizedTicks { get => _EnergizedTicks; set { if (_EnergizedTicks != value) { _EnergizedTicks = value; } } }
+            public Int32 PreviousX { get => _PreviousX; set { if (_PreviousX != value) { _PreviousX = value; } } }
+            public Int32 PreviousY { get => _PreviousY; set { if (_PreviousY != value) { _PreviousY = value; } } }
+            public Int32 EnergizedTicks { get => _EnergizedTicks; set { if (_EnergizedTicks != value) { _EnergizedTicks = value; } } }
             public eDirections CurrentDirection { get => _CurrentDirection; set { if (_CurrentDirection != value) { _CurrentDirection = value; } } }
             public eDirections PlannedDirection { get => _PlannedDirection; set { if (_PlannedDirection != value) { _PlannedDirection = value; } } }
-            public string Image { get => _Image; set { if (_Image != value) { _Image = value; } } }
+            public String Image { get => _Image; set { if (_Image != value) { _Image = value; } } }
             public PacManComponent Context { get; set; }
 
             public Player()
             {
-                _Transform = new Transform(0, 0, 14, 14);
+                _Transform = new Transform(0, 0, 12, 12);
                 _CurrentDirection = eDirections.Idle;
                 _PlannedDirection = eDirections.Idle;
                 _Image = "PacMan_Right_1";
@@ -971,7 +1013,7 @@ namespace PacMan
                     }
                 }
 
-                bool _WallOnWay = false;
+                Boolean _WallOnWay = false;
                 switch (this.PlannedDirection)
                 {
                     case eDirections.Up:
@@ -1008,7 +1050,7 @@ namespace PacMan
             }
         }
 
-        public class Wall
+        private class Wall
         {
             private Transform _Transform = null;
 
@@ -1025,26 +1067,26 @@ namespace PacMan
             }
         }
 
-        public class Ghost
+        private class Ghost
         {
             private Transform _Transform = null;
-            private int _TicksBeforeNextStep = 0;
-            private const int _TicksToStep = 2;
-            private string _Image = "GreenGhost_Right_1";
-            private string _CurrentColor = "Green";
-            private int _AnimationTick = 0;
+            private Int32 _TicksBeforeNextStep = 0;
+            private const Int32 _TicksToStep = 2;
+            private String _Image = "GreenGhost_Right_1";
+            private String _CurrentColor = "Green";
+            private Int32 _AnimationTick = 0;
             private List<Point> _PathToTarget = null;
-            private int _PathStepsWalked = 0;
-            private int _Alertness = 0;
+            private Int32 _PathStepsWalked = 0;
+            private Int32 _Alertness = 0;
             private PacManComponent _Context = null;
 
             public Transform Transform { get => _Transform; set { if (_Transform != value) { _Transform = value; } } }
-            public int Alertness { get => _Alertness; set { if (_Alertness != value) { _Alertness = value; } } }
+            public Int32 Alertness { get => _Alertness; set { if (_Alertness != value) { _Alertness = value; } } }
             public List<Point> PathToTarget { get => _PathToTarget; set { if (_PathToTarget != value) { _PathToTarget = value; } } }
-            public int TicksBeforeNextStep { get => _TicksBeforeNextStep; set { if (_TicksBeforeNextStep != value) { _TicksBeforeNextStep = value; } } }
-            public int PathStepsWalked { get => _PathStepsWalked; set { if (_PathStepsWalked != value) { _PathStepsWalked = value; } } }
-            public string Image { get => _Image; set { if (_Image != value) { _Image = value; } } }
-            public string CurrentColor { get => _CurrentColor; set { if (_CurrentColor != value) { _CurrentColor = value; } } }
+            public Int32 TicksBeforeNextStep { get => _TicksBeforeNextStep; set { if (_TicksBeforeNextStep != value) { _TicksBeforeNextStep = value; } } }
+            public Int32 PathStepsWalked { get => _PathStepsWalked; set { if (_PathStepsWalked != value) { _PathStepsWalked = value; } } }
+            public String Image { get => _Image; set { if (_Image != value) { _Image = value; } } }
+            public String CurrentColor { get => _CurrentColor; set { if (_CurrentColor != value) { _CurrentColor = value; } } }
             public PacManComponent Context { get; set; }
 
             public Ghost(Transform in_SpawnPosition)
@@ -1098,40 +1140,40 @@ namespace PacMan
                     else if (_Image == _CurrentColor + "Ghost_Down_2") { _Image = _CurrentColor + "Ghost_Down_1"; }
                 }
 
-                if (RayHit(this.Transform, _Context._Player.Transform, _Context._Walls) == true)
+                if (_Context.RayHit(this.Transform, _Context._Player.Transform) == true)
                 {
-                    this.Alertness = 300;
-                    this.PathToTarget = null;
+                    _Alertness = 600;
+                    _PathToTarget = null;
                 }
 
-                if(this._PathToTarget == null)
+                if(_PathToTarget == null)
                 {
-                    if(this._Alertness==0)
+                    if(_Alertness==0)
                     {
-                        this._PathStepsWalked = 0;
-                        this._PathToTarget = PathFind.FindPath(this._Context._NavMap, new Point(this.Transform.Y / 14, this.Transform.X / 14), this._Context.GetRandomNonWallPoint());
+                        _PathStepsWalked = 1;
+                        _PathToTarget = PathFind.FindPath(_Context._NavMap, new Point(this.Transform.Y / 14, this.Transform.X / 14), this._Context.GetRandomNonWallPoint());
                     }
-                    else if(this._Alertness>0)
+                    else if(_Alertness>0)
                     {
-                        this._PathStepsWalked = 0;
-                        this._PathToTarget = PathFind.FindPath(_Context._NavMap, new Point((int)this.Transform.Y / 14, (int)this.Transform.X / 14), new Point((int)_Context._Player.Transform.Y / 14, (int)_Context._Player.Transform.X / 14));
+                        _PathStepsWalked = 1;
+                        _PathToTarget = PathFind.FindPath(_Context._NavMap, new Point((Int32)this.Transform.Y / 14, (Int32)this.Transform.X / 14), new Point((Int32)_Context._Player.Transform.Y / 14, (Int32)_Context._Player.Transform.X / 14));
                     }
                 }
 
-                if (this._PathToTarget != null)
+                if (_PathToTarget != null)
                 {
-                    if (this._PathToTarget.Count > 1 && this.TicksBeforeNextStep == 0 && this.PathStepsWalked < this.PathToTarget.Count)
+                    if (_PathToTarget.Count > 0 && _TicksBeforeNextStep == 0 && _PathStepsWalked < _PathToTarget.Count)
                     {
-                        if (this.PathToTarget[this.PathStepsWalked].X * 14 > this.Transform.Y) { this.Transform.Y++; this.Image = this.CurrentColor + "Ghost_Down_1"; }
-                        else if (this.PathToTarget[this.PathStepsWalked].X * 14 < this.Transform.Y) { this.Transform.Y--; this.Image = this.CurrentColor + "Ghost_Up_1"; }
+                        if (_PathToTarget[_PathStepsWalked].X * 14 > _Transform.Y) { _Transform.Y++; _Image = _CurrentColor + "Ghost_Down_1"; }
+                        else if (_PathToTarget[_PathStepsWalked].X * 14 < _Transform.Y) { _Transform.Y--; _Image = _CurrentColor + "Ghost_Up_1"; }
 
-                        if (this.PathToTarget[this.PathStepsWalked].Y * 14 > this.Transform.X) { this.Transform.X++; this.Image = this.CurrentColor + "Ghost_Right_1"; }
-                        else if (this.PathToTarget[this.PathStepsWalked].Y * 14 < this.Transform.X) { this.Transform.X--; this.Image = this.CurrentColor + "Ghost_Left_1"; }
+                        if (_PathToTarget[_PathStepsWalked].Y * 14 > _Transform.X) { _Transform.X++; _Image = _CurrentColor + "Ghost_Right_1"; }
+                        else if (_PathToTarget[_PathStepsWalked].Y * 14 < _Transform.X) { _Transform.X--; _Image = _CurrentColor + "Ghost_Left_1"; }
 
-                        if (this.PathToTarget[this.PathStepsWalked].X * 14 == this.Transform.Y && this.PathToTarget[this.PathStepsWalked].Y * 14 == this.Transform.X) { this.PathStepsWalked++; }
+                        if (_PathToTarget[_PathStepsWalked].X * 14 == _Transform.Y && _PathToTarget[_PathStepsWalked].Y * 14 == _Transform.X) { this.PathStepsWalked++; }
 
                     }
-                    else if (this.PathStepsWalked == this.PathToTarget.Count)
+                    else if (_PathStepsWalked == _PathToTarget.Count)
                     {
                         this.PathToTarget = null;
                     }
@@ -1140,13 +1182,13 @@ namespace PacMan
 
         }
 
-        public class Pickup
+        private class Pickup
         {
             private Transform _Transform = null;
-            private bool _Energized = false;
+            private Boolean _Energized = false;
 
             public Transform Transform { get => _Transform; set { if (_Transform != value) { _Transform = value; } } }
-            public bool Energized { get => _Energized; set { if (_Energized != value) { _Energized = value; } } }
+            public Boolean Energized { get => _Energized; set { if (_Energized != value) { _Energized = value; } } }
 
             public Pickup()
             {
@@ -1154,16 +1196,16 @@ namespace PacMan
                 _Energized = false;
             }
 
-            public Pickup(Transform in_SpawnPoint, bool in_Energized)
+            public Pickup(Transform in_SpawnPoint, Boolean in_Energized)
             {
                 _Transform = in_SpawnPoint;
                 _Energized = in_Energized;
             }
         }
 
-        static class PathFind
+        private static class PathFind
         {
-            public static List<Point> FindPath(int[,] field, Point start, Point goal)
+            public static List<Point> FindPath(Int32[,] field, Point start, Point goal)
             {
                 var closedSet = new Collection<PathNode>();
                 var openSet = new Collection<PathNode>();
@@ -1201,17 +1243,17 @@ namespace PacMan
                 return null;
             }
 
-            private static int GetDistanceBetweenNeighbours()
+            private static Int32 GetDistanceBetweenNeighbours()
             {
                 return 1;
             }
 
-            private static int GetHeuristicPathLength(Point from, Point to)
+            private static Int32 GetHeuristicPathLength(Point from, Point to)
             {
                 return Math.Abs(from.X - to.X) + Math.Abs(from.Y - to.Y);
             }
 
-            private static Collection<PathNode> GetNeighbours(PathNode pathNode, Point goal, int[,] field)
+            private static Collection<PathNode> GetNeighbours(PathNode pathNode, Point goal, Int32[,] field)
             {
                 var result = new Collection<PathNode>();
 
@@ -1256,18 +1298,18 @@ namespace PacMan
             }
         }
 
-        public class PathNode
+        private class PathNode
         {
 
             public Point Position { get; set; }
 
             public PathNode CameFrom { get; set; }
 
-            public int PathLengthFromStart { get; set; }
+            public Int32 PathLengthFromStart { get; set; }
 
-            public int HeuristicEstimatePathLength { get; set; } 
+            public Int32 HeuristicEstimatePathLength { get; set; } 
 
-            public int EstimateFullPathLength
+            public Int32 EstimateFullPathLength
             {
                 get
                 {
@@ -1276,17 +1318,17 @@ namespace PacMan
             }
         }
 
-        public class Transform
+        private class Transform
         {
-            private int _X = -1;
-            private int _Y = -1;
-            private int _Width = -1;
-            private int _Height = -1;
+            private Int32 _X = -1;
+            private Int32 _Y = -1;
+            private Int32 _Width = -1;
+            private Int32 _Height = -1;
 
-            public int X { get => _X; set { if (_X != value) { _X = value; } } }
-            public int Y { get => _Y; set { if (_Y != value) { _Y = value; } } }
-            public int Width { get => _Width; set { if (_Width != value) { _Width = value; } } }
-            public int Height { get => _Height; set { if (_Height != value) { _Height = value; } } }
+            public Int32 X { get => _X; set { if (_X != value) { _X = value; } } }
+            public Int32 Y { get => _Y; set { if (_Y != value) { _Y = value; } } }
+            public Int32 Width { get => _Width; set { if (_Width != value) { _Width = value; } } }
+            public Int32 Height { get => _Height; set { if (_Height != value) { _Height = value; } } }
 
             public Transform()
             {
@@ -1296,7 +1338,7 @@ namespace PacMan
                 _Height = -1;
             }
 
-            public Transform(int in_X, int in_Y, int in_Width, int in_Height)
+            public Transform(Int32 in_X, Int32 in_Y, Int32 in_Width, Int32 in_Height)
             {
                 _X = in_X;
                 _Y = in_Y;

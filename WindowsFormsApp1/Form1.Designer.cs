@@ -35,10 +35,14 @@ namespace WindowsFormsApp1
             // 
             // listBox1
             // 
+            this.listBox1.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.listBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.listBox1.ForeColor = System.Drawing.SystemColors.Window;
             this.listBox1.FormattingEnabled = true;
+            this.listBox1.ItemHeight = 25;
             this.listBox1.Location = new System.Drawing.Point(433, 12);
             this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(396, 433);
+            this.listBox1.Size = new System.Drawing.Size(396, 429);
             this.listBox1.TabIndex = 1;
             // 
             // pacManComponent3
@@ -58,6 +62,7 @@ namespace WindowsFormsApp1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.ClientSize = new System.Drawing.Size(1294, 688);
             this.Controls.Add(this.listBox1);
             this.Controls.Add(this.pacManComponent3);
