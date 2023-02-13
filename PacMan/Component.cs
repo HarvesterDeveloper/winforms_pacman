@@ -242,6 +242,10 @@ namespace PacMan
                         Point _RandomRespawnPoint = GetRandomNonWallPoint();
                         _Player.Transform.X = _RandomRespawnPoint.X * 14;
                         _Player.Transform.Y = _RandomRespawnPoint.Y * 14;
+                        _Ghosts[0].Alertness = 0;
+                        _Ghosts[1].Alertness = 0;
+                        _Ghosts[2].Alertness = 0;
+                        _Ghosts[3].Alertness = 0;
                     }
                 }
 
@@ -869,15 +873,15 @@ namespace PacMan
         }
 
         // Функция, возвращающая значение в зависимости от пересечения луча со стеной. Если луч не встретился с стеной, то возвращается true, но при пресечении стены вернёт false.
-        private Boolean RayHit(Transform start, Transform dest)
+        private Boolean RayHit(Int32 startX, Int32 startY, Int32 destX, Int32 destY, Int32 rayThickness)
         {
             Boolean res = true;
             Single times = 0.00f;
-            Transform curRayPos = new Transform(start.X, start.Y, 14, 14);
+            Transform curRayPos = new Transform(startX, startY, rayThickness, rayThickness);
 
             while(times <= 1.0f)
             {
-                curRayPos = new Transform((Int32)(start.X + (dest.X - start.X) * times), (Int32)(start.Y + (dest.Y - start.Y) * times), 1, 1);
+                curRayPos = new Transform((Int32)(startX + (destX - startX) * times), (Int32)(startY + (destY - startY) * times), rayThickness, rayThickness);
                 foreach (Wall _CurrentWall in _Walls)
                 {
                     if (isOverlaping(curRayPos, _CurrentWall.Transform) == true)
@@ -1140,7 +1144,7 @@ namespace PacMan
                     else if (_Image == _CurrentColor + "Ghost_Down_2") { _Image = _CurrentColor + "Ghost_Down_1"; }
                 }
 
-                if (_Context.RayHit(this.Transform, _Context._Player.Transform) == true)
+                if (_Context.RayHit(_Transform.X+7, _Transform.Y+7, _Context._Player.Transform.X+7, _Context._Player.Transform.Y+7, 2) == true)
                 {
                     _Alertness = 600;
                     _PathToTarget = null;
