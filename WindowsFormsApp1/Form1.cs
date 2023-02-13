@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using System.Xml.Linq;
 
 namespace WindowsFormsApp1
 {
@@ -32,12 +34,18 @@ namespace WindowsFormsApp1
 
         private void pacManComponent3_OnMatchWin()
         {
-            listBox1.Items.Add("You win match");
+            if (listBox1.InvokeRequired)
+            {
+                listBox1.Invoke(new MethodInvoker(delegate { listBox1.Items.Add("You win match"); }));
+            }
         }
 
         private void pacManComponent3_OnMatchLoose()
         {
-            listBox1.Items.Add("You loose match");
+            if (listBox1.InvokeRequired)
+            {
+                listBox1.Invoke(new MethodInvoker(delegate { listBox1.Items.Add("You loose match"); }));
+            }
         }
     }
 }

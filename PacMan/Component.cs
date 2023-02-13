@@ -239,9 +239,9 @@ namespace PacMan
                     if (isOverlaping(_Player.Transform, _Ghosts[i].Transform) && _Player.EnergizedTicks == 0)
                     {
                         _Lives--;
-                        Point _RandomRespawnPoint = GetRandomNonWallPoint();
-                        _Player.Transform.X = _RandomRespawnPoint.X * 14;
-                        _Player.Transform.Y = _RandomRespawnPoint.Y * 14;
+                        Point rndRespawnPoint = GetRandomNonWallPoint();
+                        _Player.Transform.X = rndRespawnPoint.X * 14;
+                        _Player.Transform.Y = rndRespawnPoint.Y * 14;
                         _Ghosts[0].Alertness = 0;
                         _Ghosts[1].Alertness = 0;
                         _Ghosts[2].Alertness = 0;
