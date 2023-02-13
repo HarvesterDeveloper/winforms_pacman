@@ -191,8 +191,14 @@ namespace PacMan
                     if (openFileDialog.ShowDialog() == DialogResult.OK)
                     {
                         StartMatch();
-                        LoadMap(openFileDialog.FileNames[0]);
-                        _Timer.Enabled = true;
+                        if(LoadMap(openFileDialog.FileNames[0]))
+                        {
+                            _Timer.Enabled = true;
+                        }
+                        else
+                        {
+                            CloseMatch();
+                        }
                     }
                 }
 
@@ -798,7 +804,7 @@ namespace PacMan
         }
 
         // Метод спавнящий объекты из текстового файла по указанному пути.
-        private void LoadMap(String path)
+        private Boolean LoadMap(String path)
         {
             StreamReader streamreader = new StreamReader(path);
             String readedLine = "";
@@ -807,6 +813,8 @@ namespace PacMan
             Int32 i = 0;
             Int32 curPickupIndex = 0;
             Int32 ghostsCreated = 0;
+            Boolean res = true;
+            String errText = "";
 
             while (streamreader.EndOfStream == false)
             {
@@ -847,6 +855,21 @@ namespace PacMan
                 posX = 0;
             }
             streamreader.Close();
+
+            if(_Player == null)
+            {
+                errText+="Map doesnt contain player's spawn\n";
+                res = false;
+            }
+            if(ghostsCreated != 3)
+            {
+                errText+="Map has wrong number of ghosts\n";
+                res = false;
+            }
+
+            if (errText != "") MessageBox.Show(errText);
+
+            return res;
         }
 
         // Сменяет сцену на матч.
