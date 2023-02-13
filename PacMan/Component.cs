@@ -277,22 +277,26 @@ namespace PacMan
                 }
 
                 // other game managment stuff
-                if (_Lives <= 0)
-                {
-                    _CurrentPage = ePages.Menu;
-                    _Timer.Enabled = false;
-                    OnMatchLoose();
-                    CloseMatch();
-                }
-
-                // other game managment stuff
-                if (_Score >=_MaxScore)
+                if (_Score >= _MaxScore)
                 {
                     _CurrentPage = ePages.Menu;
                     _Timer.Enabled = false;
                     OnMatchWin();
                     CloseMatch();
+                    Console.WriteLine("win");
                 }
+
+                // other game managment stuff
+                else if (_Lives <= 0)
+                {
+                    _CurrentPage = ePages.Menu;
+                    _Timer.Enabled = false;
+                    OnMatchLoose();
+                    CloseMatch();
+                    Console.WriteLine("lose");
+                }
+
+
 
             }
 
@@ -1181,7 +1185,7 @@ namespace PacMan
                     if(_Alertness==0)
                     {
                         _PathStepsWalked = 1;
-                        _PathToTarget = PathFind.FindPath(_Context._NavMap, new Point(this.Transform.Y / 14, this.Transform.X / 14), this._Context.GetRandomNonWallPoint());
+                        _PathToTarget = PathFind.FindPath(_Context._NavMap, new Point(_Transform.Y / 14, this.Transform.X / 14), this._Context.GetRandomNonWallPoint());
                     }
                     else if(_Alertness>0)
                     {
