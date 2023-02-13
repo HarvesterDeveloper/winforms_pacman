@@ -820,35 +820,38 @@ namespace PacMan
             {
                 readedLine = streamreader.ReadLine();
 
-                for (i = 0; i < readedLine.Length; i++)
+                if(readedLine.Length<29)
                 {
-                    switch (readedLine[i])
+                    for (i = 0; i < readedLine.Length; i++)
                     {
-                        case 'w':
-                            _Walls.Add(new Wall(new Transform(posX * 14, posY * 14, 14, 14)));
-                            _NavMap[posY, posX] = 2;
-                            break;
-                        case 'p':
-                            _Player = new Player(new Transform(posX * 14, posY * 14, 10 ,10), this);
-                            break;
-                        case 'g':
-                            _Ghosts[ghostsCreated] = new Ghost(new Transform(posX * 14, posY * 14, 14, 14), this);
-                            if(ghostsCreated < 3) { ghostsCreated++; }
-                            break;
-                        case 'e':
-                            curPickupIndex = 0;
-                            while (_Pickups[curPickupIndex] != null && curPickupIndex < _Pickups.Length) { curPickupIndex++; }
-                            _Pickups[curPickupIndex] = new Pickup(new Transform(posX * 14, posY * 14, 8, 8), true);
-                            break;
-                        case 'i':
-                            curPickupIndex = 0;
-                            while (_Pickups[curPickupIndex] != null && curPickupIndex < _Pickups.Length) { curPickupIndex++; }
-                            _Pickups[curPickupIndex] = new Pickup(new Transform(posX * 14+4, posY * 14+4, 4, 4), false);
-                            _MaxScore++;
-                            break;
-                    }
+                        switch (readedLine[i])
+                        {
+                            case 'w':
+                                _Walls.Add(new Wall(new Transform(posX * 14, posY * 14, 14, 14)));
+                                _NavMap[posY, posX] = 2;
+                                break;
+                            case 'p':
+                                _Player = new Player(new Transform(posX * 14, posY * 14, 10, 10), this);
+                                break;
+                            case 'g':
+                                _Ghosts[ghostsCreated] = new Ghost(new Transform(posX * 14, posY * 14, 14, 14), this);
+                                if (ghostsCreated < 3) { ghostsCreated++; }
+                                break;
+                            case 'e':
+                                curPickupIndex = 0;
+                                while (_Pickups[curPickupIndex] != null && curPickupIndex < _Pickups.Length) { curPickupIndex++; }
+                                _Pickups[curPickupIndex] = new Pickup(new Transform(posX * 14, posY * 14, 8, 8), true);
+                                break;
+                            case 'i':
+                                curPickupIndex = 0;
+                                while (_Pickups[curPickupIndex] != null && curPickupIndex < _Pickups.Length) { curPickupIndex++; }
+                                _Pickups[curPickupIndex] = new Pickup(new Transform(posX * 14 + 4, posY * 14 + 4, 4, 4), false);
+                                _MaxScore++;
+                                break;
+                        }
 
-                    posX++;
+                        posX++;
+                    }
                 }
 
                 posY++;
